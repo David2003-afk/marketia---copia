@@ -10,7 +10,7 @@ export function AppProvider({ children }) {
   const [selectedCat,  setSelectedCat]  = useState('Todos')
   const [searchQ,      setSearchQ]      = useState('')
   const [selectedProd, setSelectedProd] = useState(null)
-  const [checkoutStep, setCheckoutStep] = useState('cart')   // cart | pay | success
+  const [checkoutStep, setCheckoutStep] = useState('cart')
   const [sellerTab,    setSellerTab]    = useState('dashboard')
   const [adminTab,     setAdminTab]     = useState('products')
   const [toast,        setToast]        = useState(null)
@@ -66,12 +66,42 @@ export function AppProvider({ children }) {
     return false
   }, [users])
 
-  const mockGoogleLogin = useCallback(() => {
-    setUser(USERS[0]); setView('home')
-    showToast('✅ Sesión iniciada con Google como ' + USERS[0].name)
-  }, [showToast])
+  /* ── Google OAuth real ── */
+  const googleLogin = useCallback((googleUser) => {
+    const { name, email, picture, sub } = googleUser
+    const existing = users.find(u => u.email === email)
+    if (existing) {
+      setUser(existing)
+      setView(existing.role === 'seller' ? 'seller' : existing.role === 'admin' ? 'admin' : 'home')
+      showToast('✅ Bienvenido/a de vuelta, ' + existing.name.split(' ')[0] + '!')
+    } else {
+      const newU = {
+        id: sub || Date.now(),
+        name,
+        email,
+        pass: null,
+        role: 'buyer',
+        avatar: name.split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase(),
+        picture,
+        purchases: [],
+        phone: '',
+        address: '',
+        joined: new Date().toISOString().slice(0,10),
+      }
+      setUsers(p => [...p, newU])
+      setUser(newU)
+      setView('home')
+      showToast('🎉 ¡Bienvenido/a ' + name.split(' ')[0] + '!')
+    }
+  }, [users, showToast])
 
-  const logout = useCallback(() => { setUser(null); setCart([]); setView('home') }, [])
+  const logout = useCallback(() => {
+    // Sign out from Google too
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect()
+    }
+    setUser(null); setCart([]); setView('home')
+  }, [])
 
   const registerUser = useCallback((data) => {
     const newU = {
@@ -109,7 +139,7 @@ export function AppProvider({ children }) {
   return (
     <Ctx.Provider value={{
       view, setView,
-      user, login, logout, mockGoogleLogin, registerUser,
+      user, login, logout, googleLogin, registerUser,
       cart, addToCart, removeFromCart, changeQty, cartCount, cartTotal,
       selectedCat, setSelectedCat,
       searchQ, setSearchQ,
