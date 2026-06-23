@@ -1,0 +1,12 @@
+.tableWrap { overflow-x:auto; background:var(--surface); border:1px solid var(--border-md); border-radius:var(--radius-lg); }
+.table { width:100%; border-collapse:collapse; font-size:13px; }
+.table th { font-size:11px; color:var(--text2); font-weight:500; padding:8px 12px; border-bottom:1px solid var(--border-md); text-align:left; background:var(--surface2); }
+.table td { padding:9px 12px; border-bottom:1px solid var(--border); }
+.table tr:last-child td { border-bottom:none; }
+
+.btnOk  { padding:4px 9px; border-radius:5px; font-size:11px; border:1px solid #86EFAC; color:#166534; background:#F0FDF4; margin-right:4px; }
+.btnOk:hover { background:#D1FAE5; }
+.btnBan { padding:4px 9px; border-radius:5px; font-size:11px; border:1px solid #FCA5A5; color:#DC2626; background:#FEF2F2; }
+.btnBan:hover { background:#FEE2E2; }
+
+.empty { text-align:center; color:var(--text3); padding:1.5rem; }

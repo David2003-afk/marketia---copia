@@ -1,0 +1,6 @@
+.col { width:138px; min-width:138px; padding:.8rem .5rem; display:flex; flex-direction:column; gap:10px; }
+.box { background:var(--ad-bg); border:1px solid var(--ad-border); border-radius:var(--radius-md); padding:10px 8px; text-align:center; }
+.label { font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:#C4A870; margin-bottom:5px; }
+.icon { font-size:26px; margin-bottom:4px; }
+.title { font-size:12px; font-weight:600; color:#7A5C30; margin-bottom:2px; }
+.sub { font-size:11px; color:#9A7A50; line-height:1.4; }
