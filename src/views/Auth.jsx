@@ -1,32 +1,82 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../AppContext.jsx'
 import s from './Auth.module.css'
+
+const GOOGLE_CLIENT_ID = '665907030308-m69hmcigdofkdf4vi1b9jtaukl6mso79.apps.googleusercontent.com'
 
 /* ── Password strength ── */
 function pwStrength(v) {
   let score = 0
-  if (v.length >= 8)        score++
-  if (/[A-Z]/.test(v))     score++
-  if (/[a-z]/.test(v))     score++
-  if (/[0-9]/.test(v))     score++
+  if (v.length >= 8)           score++
+  if (/[A-Z]/.test(v))        score++
+  if (/[a-z]/.test(v))        score++
+  if (/[0-9]/.test(v))        score++
   if (/[^A-Za-z0-9]/.test(v)) score++
   return score
 }
 const strengthColor = ['#EF4444','#F97316','#F59E0B','#22C55E','#3B82F6']
 const strengthLabel = ['Muy débil','Débil','Regular','Fuerte','Muy fuerte']
 
+/* ── Google button wrapper ── */
+function GoogleBtn({ label }) {
+  const { googleLogin } = useApp()
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const init = () => {
+      if (!window.google?.accounts?.id || !ref.current) return
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (res) => {
+          // Decode JWT payload
+          const payload = JSON.parse(atob(res.credential.split('.')[1]))
+          googleLogin({
+            name: payload.name,
+            email: payload.email,
+            picture: payload.picture,
+            sub: payload.sub,
+          })
+        },
+      })
+      window.google.accounts.id.renderButton(ref.current, {
+        theme: 'outline',
+        size: 'large',
+        width: ref.current.offsetWidth || 320,
+        text: label === 'register' ? 'signup_with' : 'signin_with',
+        locale: 'es',
+        shape: 'rectangular',
+      })
+    }
+
+    // If GSI already loaded
+    if (window.google?.accounts?.id) {
+      init()
+    } else {
+      // Wait for script to load
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.id) { clearInterval(interval); init() }
+      }, 100)
+      return () => clearInterval(interval)
+    }
+  }, [googleLogin, label])
+
+  return (
+    <div ref={ref} style={{ width: '100%', minHeight: 44, margin: '.1rem 0' }} />
+  )
+}
+
 export default function Auth() {
-  const { view, setView, login, mockGoogleLogin, registerUser } = useApp()
-  const [email,   setEmail]   = useState('')
-  const [pass,    setPass]    = useState('')
-  const [err,     setErr]     = useState('')
+  const { view, setView, login, registerUser } = useApp()
+  const [email,    setEmail]    = useState('')
+  const [pass,     setPass]     = useState('')
+  const [err,      setErr]      = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPass,  setRegPass]  = useState('')
   const [regErr,   setRegErr]   = useState('')
-  const [name,    setName]    = useState('')
-  const [phone,   setPhone]   = useState('')
-  const [addr,    setAddr]    = useState('')
-  const [role,    setRole]    = useState('')
+  const [name,     setName]     = useState('')
+  const [phone,    setPhone]    = useState('')
+  const [addr,     setAddr]     = useState('')
+  const [role,     setRole]     = useState('')
 
   const pwOk = (p) => /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p) && p.length >= 8
   const score = pwStrength(regPass)
@@ -52,7 +102,7 @@ export default function Auth() {
         }}>Ingresar</button>
 
         <div className={s.divider}>o continúa con</div>
-        <button className={s.google} onClick={mockGoogleLogin}>🔵 Continuar con Google</button>
+        <GoogleBtn label="login" />
         <span className={s.link} onClick={() => setView('register')}>¿No tienes cuenta? Regístrate</span>
 
         <div className={s.demo}>
@@ -95,7 +145,7 @@ export default function Auth() {
         }}>Continuar</button>
 
         <div className={s.divider}>o regístrate con</div>
-        <button className={s.google} onClick={mockGoogleLogin}>🔵 Registrarse con Google</button>
+        <GoogleBtn label="register" />
         <span className={s.link} onClick={() => setView('login')}>¿Ya tienes cuenta? Ingresar</span>
       </div>
     </div>
@@ -115,7 +165,7 @@ export default function Auth() {
         <div className="form-group"><label>Dirección</label>
           <input type="text" placeholder="Ciudad, Distrito" value={addr} onChange={e => setAddr(e.target.value)} />
         </div>
-        <p style={{fontSize:12,color:'var(--text2)',marginBottom:'.5rem'}}>Selecciona tu rol</p>
+        <p style={{fontSize:12,color:'var(--text2)',marginBottom:'.5rem',fontWeight:600}}>Selecciona tu rol</p>
         <div className={s.roles}>
           <div className={`${s.role} ${role==='buyer' ? s.roleActive : ''}`} onClick={() => setRole('buyer')}>
             <div className={s.roleIcon}>🛍️</div> Comprador
